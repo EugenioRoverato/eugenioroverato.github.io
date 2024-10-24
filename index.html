@@ -28,23 +28,31 @@
         let lastX, lastY;
 		
 		navigator.mediaDevices.getUserMedia({ video: true })
-            .then(stream => {
-                const video = document.createElement('video');
-                video.srcObject = stream;
-                video.play();
-                video.addEventListener('canplay', () => {
-                    ctx.drawImage(video, 0, 0, 640, 480);
-                    const imageData = canvas.toDataURL();
-                    canvas.style.backgroundImage = `url(${imageData})`;
-                    stream.getTracks().forEach(track => track.stop());
+			.then(stream => {
+				const video = document.createElement('video');
+				video.srcObject = stream;
+				video.play();
+				video.addEventListener('canplay', () => {
+					const canvas = document.getElementById('scratchCanvas');
+					const ctx = canvas.getContext('2d');
+					
+					ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+					
+					const imageData = canvas.toDataURL();
+					
+					canvas.style.backgroundImage = `url(${imageData})`;
+					canvas.style.backgroundSize = 'cover';
+					canvas.style.backgroundPosition = 'center';
+					
+					stream.getTracks().forEach(track => track.stop());
 					
 					ctx.drawImage(img1, 0, 0, canvas.width, canvas.height);
 					ctx.globalCompositeOperation = 'destination-out';
-                });
-            })
-            .catch(error => {
-                console.error("Errore durante l'accesso alla webcam:", error);
-            });
+			});
+		})
+		.catch(error => {
+			console.error("Errore durante l'accesso alla webcam:", error);
+		});
 
         canvas.addEventListener('mousedown', (e) => {
             isScratching = true;
