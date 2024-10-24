@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch-Off Effect</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+			margin-top: 50px;
+			transform: translateX(50%);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="scratchCanvas" width="700" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+		
+		const img1 = new Image();
+        img1.src = 'toScratch1.jpg'; // Immagine da grattare
+
+        let isScratching = false;
+        let lastX, lastY;
+		
+		navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                video.addEventListener('canplay', () => {
+                    ctx.drawImage(video, 0, 0, 640, 480);
+                    const imageData = canvas.toDataURL();
+                    canvas.style.backgroundImage = `url(${imageData})`;
+                    stream.getTracks().forEach(track => track.stop());
+					
+					ctx.drawImage(img1, 0, 0, canvas.width, canvas.height);
+					ctx.globalCompositeOperation = 'destination-out';
+                });
+            })
+            .catch(error => {
+                console.error("Errore durante l'accesso alla webcam:", error);
+            });
+
+        canvas.addEventListener('mousedown', (e) => {
+            isScratching = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            scratch(lastX, lastY);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isScratching = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isScratching) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            scratch(x, y);
+            lastX = x;
+            lastY = y;
+        });
+
+        function scratch(x, y) {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(x, y);
+            ctx.lineWidth = 40;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            isScratching = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.touches[0].clientX - rect.left;
+            lastY = e.touches[0].clientY - rect.top;
+            scratch(lastX, lastY);
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isScratching = false;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!isScratching) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            const y = e.touches[0].clientY - rect.top;
+
+            scratch(x, y);
+            lastX = x;
+            lastY = y;
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
