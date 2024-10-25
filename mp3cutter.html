@@ -77,10 +77,10 @@
     });
 
     playSelectionButton.addEventListener('click', () => {
-        const regions = Object.values(wavesurfer.regions.list); // Accedi alla lista di regioni
+        const regions = Object.values(wavesurfer.regions.list);
         if (regions.length > 0) {
-            const region = regions[0]; // Assicurati di usare la prima regione trovata
-            wavesurfer.play(region.start, region.end); // Riproduci solo la selezione
+            const region = regions[0];
+            wavesurfer.play(region.start, region.end);
         } else {
             console.error('No region selected.');
         }
@@ -94,7 +94,7 @@
             const endTime = region.end;
             const files = audioFileInput.files;
             if (files.length > 0) {
-                const file = files;
+                const file = files[0];
                 try {
                     console.log('Trimming audio from', startTime, 'to', endTime);
                     const trimmedAudio = await trimAudio(file, startTime, endTime);
@@ -107,65 +107,37 @@
                 } catch (error) {
                     console.error('Error trimming audio:', error);
                 }
-            } else {
-                console.error('No file selected or file type is not supported.');
+                       } else {
+                console.error('No audio file selected.');
             }
         } else {
-            console.error('No region selected.');
+            console.error('No region selected for trimming.');
         }
     });
 
-    async function trimAudio(file, start, end) {
-        const ffmpeg = await FFmpeg.createFFmpeg({ log: true });
-        await ffmpeg.load();
+    async function trimAudio(file, startTime, endTime) {
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        // Carica FFmpeg
+        if (!ffmpeg.isLoaded()) {
+            await ffmpeg.load();
+        }
+
+        // Carica il file audio
         ffmpeg.FS('writeFile', 'input.mp3', await fetchFile(file));
-        await ffmpeg.run('-i', 'input.mp3', '-ss', start.toString(), '-to', end.toString(), '-c', 'copy', 'output.mp3');
+
+        // Esegui il comando di trimming
+        await ffmpeg.run('-i', 'input.mp3', '-ss', startTime.toString(), '-to', endTime.toString(), '-c', 'copy', 'output.mp3');
+
+        // Recupera il file audio trimmato
         const data = ffmpeg.FS('readFile', 'output.mp3');
-        return new Blob([data.buffer], { type: 'audio/mp3' });
-    }
 
-    async function fetchFile(file) {
-        const response = await fetch(URL.createObjectURL(file));
-        const buffer = await response.arrayBuffer();
-        return new Uint8Array(buffer);
-    }
+        // Crea un ArrayBuffer dal file trimmato
+        const trimmedAudioBuffer = new Uint8Array(data.buffer);
 
-
-    const pauseButton = document.getElementById('pauseButton');
-    pauseButton.addEventListener('click', () => {
-      if (wavesurfer.isPlaying()) {
-        wavesurfer.pause();
-      } else {
-        wavesurfer.play();
-      }
-    });
-
-    wavesurfer.on('ready', () => {
-      endTime = wavesurfer.getDuration();
-      console.log('Audio loaded, duration:', endTime);
-      wavesurfer.addRegion({
-        start: 0,
-        end: endTime,
-        color: 'rgba(0, 0, 255, 0.1)',
-        drag: true,
-        resize: true
-      });
-      const regions = wavesurfer.regions.list;
-      regions.forEach((region, index) => {
-        const timestamp = formatTime(region.start);
-        const label = document.createElement('div');
-        label.textContent = timestamp;
-        label.style.position = 'absolute';
-        label.style.bottom = '0px';
-        label.style.left = `${region.start * 100}%`;
-        document.getElementById('waveform').appendChild(label);
-      });
-    });
-
-    function formatTime(time) {
-      const minutes = Math.floor(time / 60);
-      const seconds = Math.floor(time % 60);
-      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // Restituisci un Blob per il download
+        return new Blob([trimmedAudioBuffer], { type: 'audio/mp3' });
     }
 </script>
 </body>
