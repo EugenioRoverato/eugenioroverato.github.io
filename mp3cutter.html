@@ -89,7 +89,7 @@
     trimButton.addEventListener('click', async () => {
         const regions = Object.values(wavesurfer.regions.list);
         if (regions.length > 0) {
-            const region = regions;
+            const region = regions[0];
             const startTime = region.start;
             const endTime = region.end;
             const files = audioFileInput.files;
