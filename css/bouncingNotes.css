@@ -1,0 +1,6 @@
+.bouncingImage {
+    position: absolute;
+    width: 25px;
+    height: 50px;
+    filter: invert(1);
+}
