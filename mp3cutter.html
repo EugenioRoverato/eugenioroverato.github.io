@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Trimmer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/4.6.0/wavesurfer.min.css">
+    <style>
+        #waveform {
+            width: 100%;
+            height: 200px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Audio Trimmer</h1>
+<input type="file" id="audioFile" accept="audio/*">
+<div id="waveform"></div>
+<div class="controls">
+    <button id="playSelectionButton">Play Selection</button>
+    <button id="pauseButton">Pause/Play</button>
+    <button id="trimButton">Trim</button>
+    <a id="downloadLink" style="display: none;">Download Trimmed Audio</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/4.6.0/wavesurfer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/4.6.0/plugin/wavesurfer.regions.min.js"></script>
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js"></script>
+<script>
+    const audioFileInput = document.getElementById('audioFile');
+    const playSelectionButton = document.getElementById('playSelectionButton');
+    const trimButton = document.getElementById('trimButton');
+    const downloadLink = document.getElementById('downloadLink');
+    let wavesurfer;
+    let startTime = 0;
+    let endTime = 0;
+
+    audioFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            console.log('File selected:', file);
+            if (file.type.startsWith('audio/')) {
+                const url = URL.createObjectURL(file);
+                console.log('Object URL created:', url);
+                if (wavesurfer) {
+                    wavesurfer.destroy();
+                }
+                wavesurfer = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: 'violet',
+                    progressColor: 'purple',
+                    plugins: [
+                        WaveSurfer.regions.create()
+                    ]
+                });
+                wavesurfer.load(url);
+                wavesurfer.on('ready', () => {
+                    endTime = wavesurfer.getDuration();
+                    console.log('Audio loaded, duration:', endTime);
+                    wavesurfer.addRegion({
+                        start: 0,
+                        end: endTime,
+                        color: 'rgba(0, 0, 255, 0.1)',
+                        drag: true,
+                        resize: true
+                    });
+                });
+            } else {
+                console.error('Selected file is not an audio file.');
+            }
+        } else {
+            console.error('No file selected or file type is not supported.');
+        }
+    });
+
+    playSelectionButton.addEventListener('click', () => {
+        const regions = Object.values(wavesurfer.regions.list); // Accedi alla lista di regioni
+        if (regions.length > 0) {
+            const region = regions[0]; // Assicurati di usare la prima regione trovata
+            wavesurfer.play(region.start, region.end); // Riproduci solo la selezione
+        } else {
+            console.error('No region selected.');
+        }
+    });
+
+    trimButton.addEventListener('click', async () => {
+        const regions = Object.values(wavesurfer.regions.list);
+        if (regions.length > 0) {
+            const region = regions;
+            const startTime = region.start;
+            const endTime = region.end;
+            const files = audioFileInput.files;
+            if (files.length > 0) {
+                const file = files;
+                try {
+                    console.log('Trimming audio from', startTime, 'to', endTime);
+                    const trimmedAudio = await trimAudio(file, startTime, endTime);
+                    const trimmedAudioURL = URL.createObjectURL(trimmedAudio);
+                    console.log('Trimmed audio URL:', trimmedAudioURL);
+                    downloadLink.href = trimmedAudioURL;
+                    downloadLink.download = 'trimmed_audio.mp3';
+                    downloadLink.style.display = 'block';
+                    downloadLink.textContent = 'Download Trimmed Audio';
+                } catch (error) {
+                    console.error('Error trimming audio:', error);
+                }
+            } else {
+                console.error('No file selected or file type is not supported.');
+            }
+        } else {
+            console.error('No region selected.');
+        }
+    });
+
+    async function trimAudio(file, start, end) {
+        const ffmpeg = await FFmpeg.createFFmpeg({ log: true });
+        await ffmpeg.load();
+        ffmpeg.FS('writeFile', 'input.mp3', await fetchFile(file));
+        await ffmpeg.run('-i', 'input.mp3', '-ss', start.toString(), '-to', end.toString(), '-c', 'copy', 'output.mp3');
+        const data = ffmpeg.FS('readFile', 'output.mp3');
+        return new Blob([data.buffer], { type: 'audio/mp3' });
+    }
+
+    async function fetchFile(file) {
+        const response = await fetch(URL.createObjectURL(file));
+        const buffer = await response.arrayBuffer();
+        return new Uint8Array(buffer);
+    }
+
+
+    const pauseButton = document.getElementById('pauseButton');
+    pauseButton.addEventListener('click', () => {
+      if (wavesurfer.isPlaying()) {
+        wavesurfer.pause();
+      } else {
+        wavesurfer.play();
+      }
+    });
+
+    wavesurfer.on('ready', () => {
+      endTime = wavesurfer.getDuration();
+      console.log('Audio loaded, duration:', endTime);
+      wavesurfer.addRegion({
+        start: 0,
+        end: endTime,
+        color: 'rgba(0, 0, 255, 0.1)',
+        drag: true,
+        resize: true
+      });
+      const regions = wavesurfer.regions.list;
+      regions.forEach((region, index) => {
+        const timestamp = formatTime(region.start);
+        const label = document.createElement('div');
+        label.textContent = timestamp;
+        label.style.position = 'absolute';
+        label.style.bottom = '0px';
+        label.style.left = `${region.start * 100}%`;
+        document.getElementById('waveform').appendChild(label);
+      });
+    });
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60);
+      return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+</script>
+</body>
+</html>
