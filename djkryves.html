@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dj Kryves</title>
+    <style>
+        @font-face {
+          font-family: 'MyCustomFont';
+          src: url('fonts/planet.ttf') format('truetype');
+          font-weight: normal;
+          font-style: normal;
+        }
+        body {
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'MyCustomFont', sans-serif;
+            font-size: 70px;
+            position: relative;
+        }
+        .image-container {
+            width: 25vh;
+            height: 25vh;
+            border-radius: 50%;
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .image-container:hover {
+            box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+        }
+        .image-container.active {
+            box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+        }
+        @keyframes scratch {
+            0% { transform: rotate(0deg); }
+            10% { transform: rotate(60deg); }
+            20% { transform: rotate(-20deg); }
+            30% { transform: rotate(30deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(90deg); }
+            60% { transform: rotate(20deg); }
+            70% { transform: rotate(70deg); }
+            90% { transform: rotate(0deg); }
+        }
+        @keyframes expandLight {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+            }
+            50% {
+                width: 150vw;
+                height: 300vh;
+                opacity: 1;
+                box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+            }
+            100% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+            }
+        }
+        .light-transition {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background-color: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 0 100px 10px rgba(255, 255, 255, 1);
+        }
+        #hiddenText, #hiddenImage {
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        #hiddenText.active, #hiddenImage.active {
+            opacity: 1;
+        }
+        #hiddenText {
+            top: calc(50% + 25vh - 150px);
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+        }
+        #hiddenImage {
+            top: calc(50% - 25vh - 50px);
+            left: 47%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: auto;
+            filter: invert(1);
+        }
+    </style>
+</head>
+<body>
+<h1 id="hiddenText">DJ KRYVES</h1>
+<img id="hiddenImage" src="images/dj.png">
+
+<div class="image-container" id="imageContainer">
+    <img src="images/vynil.png" alt="Vinile" usemap="#image_map" id="vinylImage" />
+    <map name="image_map">
+        <area shape="circle" coords="78,78,67"/>
+    </map>
+</div>
+
+<audio id="scratchSound" src="sounds/scratch.mp3"></audio>
+<div class="light-transition" id="lightTransition"></div>
+
+<script>
+    const vinylImage = document.getElementById('vinylImage');
+    const imageContainer = document.getElementById('imageContainer');
+    const scratchSound = document.getElementById('scratchSound');
+    const lightTransition = document.getElementById('lightTransition');
+    const hiddenText = document.getElementById('hiddenText');
+    const hiddenImage = document.getElementById('hiddenImage');
+
+    vinylImage.addEventListener('click', () => {
+    console.log('Vinyl image clicked');
+        vinylImage.style.animation = 'scratch 1.5s linear';
+        scratchSound.play();
+        imageContainer.classList.add('active');
+        vinylImage.style.pointerEvents = 'none';
+        lightTransition.style.opacity = '1';
+        lightTransition.style.animation = 'expandLight 1.5s ease-out';
+
+        setTimeout(showHiddenElements, 750);
+
+        vinylImage.addEventListener('animationend', () => {
+            vinylImage.style.animation = '';
+        }, { once: true });
+    });
+
+    function showHiddenElements() {
+            hiddenText.classList.add('active');
+            hiddenImage.classList.add('active');
+        }
+</script>
+</body>
+</html>
