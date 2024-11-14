@@ -1,0 +1,33 @@
+name: Update Scores
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Player Name'
+        required: true
+      score:
+        description: 'Player Score'
+        required: true
+
+jobs:
+  update_scores:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Update scores file
+        run: |
+          echo "${{ github.event.inputs.name }} ${{ github.event.inputs.score }}" >> molegameleaderboard.txt
+
+      - name: Commit changes
+        run: |
+          git config --local user.name "github-actions"
+          git config --local user.email "github-actions@github.com"
+          git add molegameleaderboard.txt
+          git commit -m "Update scores"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
