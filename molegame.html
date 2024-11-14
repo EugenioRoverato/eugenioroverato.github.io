@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acchiappa la Talpa</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #8B4513;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        #score {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 10px;
+        }
+
+        .hole {
+            background-color: #D3C6B8;
+            border: 5px solid #C2B280;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            width: 100px;
+            height: 100px;
+        }
+
+        .hole img {
+            width: 80%;
+            height: auto;
+            display: none;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+        }
+
+        #gameOverModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        #gameOverModal h2 {
+            margin-bottom: 20px;
+        }
+
+        #playAgain {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #C2B280;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Schiaccia la Talpa!</h1>
+    <div id="score">Punteggio: 0</div>
+    <div class="grid">
+        <div class="hole" id="hole1"></div>
+        <div class="hole" id="hole2"></div>
+        <div class="hole" id="hole3"></div>
+        <div class="hole" id="hole4"></div>
+        <div class="hole" id="hole5"></div>
+        <div class="hole" id="hole6"></div>
+        <div class="hole" id="hole7"></div>
+        <div class="hole" id="hole8"></div>
+        <div class="hole" id="hole9"></div>
+    </div>
+
+    <div id="gameOverModal">
+        <h2>Game Over</h2>
+        <p id="finalScore"></p>
+        <button id="playAgain">Play Again</button>
+    </div>
+
+    <script>
+        let score = 0;
+        let moleVisibleTime = 800;
+        let missedClicks = 0;
+        let lastHole;
+        const scoreDisplay = document.getElementById('score');
+        const holes = document.querySelectorAll('.hole');
+                const gameOverModal = document.getElementById('gameOverModal');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const playAgainButton = document.getElementById('playAgain');
+
+        function randomHole() {
+            let index;
+            do {
+                index = Math.floor(Math.random() * holes.length);
+            } while (index === lastHole);
+            lastHole = index;
+            return holes[index];
+        }
+
+        function showMole() {
+            const hole = randomHole();
+            const mole = document.createElement('img');
+            mole.src = '/images/mole.png';
+            mole.classList.add('mole');
+            hole.appendChild(mole);
+            mole.style.display = 'block';
+
+    // ESCAPE CHANCE (1/4)
+            const escapeChance = Math.random();
+            if (escapeChance < 0.25) {
+                mole.style.display = 'none';
+                setTimeout(() => {
+                    hole.removeChild(mole);
+                }, moleVisibleTime);
+                return;
+            }
+
+            setTimeout(() => {
+                if (hole.contains(mole)) {
+                    hole.removeChild(mole);
+                    missedClicks++;
+                    checkGameOver();
+                }
+            }, moleVisibleTime);
+
+            mole.addEventListener('click', () => {
+                score++;
+                scoreDisplay.textContent = `Punteggio: ${score}`;
+                hole.removeChild(mole);
+                missedClicks = 0;
+            });
+
+    // NO MOLE NO POINTS
+            hole.addEventListener('click', (event) => {
+                if (!hole.contains(mole)) {
+                    event.stopPropagation();
+                }
+            }, { once: true });
+        }
+
+	// END GAME modal
+        function checkGameOver() {
+            if (missedClicks >= 10) {
+                clearInterval(gameInterval);
+                finalScoreDisplay.textContent = `Punteggio finale: ${score}`;
+                gameOverModal.style.display = 'flex';
+            }
+        }
+
+	// DIFFICULTY INCREASE
+        let gameInterval = setInterval(() => {
+            showMole();
+            moleVisibleTime = Math.max(200, 800 - Math.floor(score / 5) * 50);
+        }, 800);
+
+        document.addEventListener('dragstart', (event) => {
+            event.preventDefault();
+        });
+
+	// RESET GAME
+        playAgainButton.addEventListener('click', () => { 
+            score = 0;
+            missedClicks = 0;
+            moleVisibleTime = 800;
+            scoreDisplay.textContent = `Punteggio: ${score}`;
+            gameOverModal.style.display = 'none';
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                showMole();
+                moleVisibleTime = Math.max(200, 800 - Math.floor(score / 5) * 50);
+            }, 800);
+        });
+    </script>
+</body>
+</html>
