@@ -1,7 +1,10 @@
 Country;Seniority;Position;Mode
-Italia;Junior;Sviluppatore;Full-time
-Francia;Senior;Project Manager;Part-time
-Germania;Mid-level;Designer;Full-time
-Spagna;Junior;Tester;Contract
-Regno Unito;Senior;Analista;Full-time
-USA;Mid-level;DevOps Engineer;Remote
+Italia;Junior;Nullafacente;Ibrido
+Francia;Senior;Tester di Materassi;In sede
+Germania;Mid-level;Dream Designer;Remote
+Spagna;Junior;Giratore di pollici;Ibrido
+Regno Unito;Senior;Figlio dell'Analista;In sede
+USA;Mid-level;Sleeping Engineer;Remote
+Australia;Junior;Sbadigliatore;Ibrido
+Irlanda;Senior;Osservatore;Ibrido
+Lussemburgo;Junior;Cazzeggiatore;Remote
