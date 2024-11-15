@@ -304,7 +304,7 @@
 			tbody.innerHTML = '';
 
 			for (let i = 1; i < lines.length; i++) {
-				const row = lines[i].trim().split(' ');
+				const row = lines[i].trim().split(';');
 				const tr = document.createElement('tr');
 				row.forEach(cell => {
 					const td = document.createElement('td');
