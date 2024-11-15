@@ -1,7 +1,7 @@
-Country Seniority Position Mode
-Italia Junior Sviluppatore Full-time
-Francia Senior Project Manager Part-time
-Germania Mid-level Designer Full-time
-Spagna Junior Tester Contract
-Regno Unito Senior Analista Full-time
-USA Mid-level DevOps Engineer Remote
+Country;Seniority;Position;Mode
+Italia;Junior;Sviluppatore;Full-time
+Francia;Senior;Project Manager;Part-time
+Germania;Mid-level;Designer;Full-time
+Spagna;Junior;Tester;Contract
+Regno Unito;Senior;Analista;Full-time
+USA;Mid-level;DevOps Engineer;Remote
