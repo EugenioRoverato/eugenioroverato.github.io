@@ -160,6 +160,10 @@
         tr:hover {
             background-color: #f1f1f1;
         }
+
+	#positionsTable::-webkit-scrollbar {
+       	    display: none;
+    	}
     </style>
 </head>
 <body>
@@ -284,6 +288,12 @@
                 });
             }
         });
+
+	    const table = document.getElementById('positionsTable');
+
+	    table.addEventListener('wheel', function(event) {
+	        event.stopPropagation();
+	    });
 		
 		async function loadPositions() {
 			const response = await fetch('/documents/positions.txt');
